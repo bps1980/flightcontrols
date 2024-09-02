@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrumentation Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .panel { border: 1px solid #ccc; padding: 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Instrumentation Panel</h1>
+    <div class="panel">
+        <h2>Flight Mode</h2>
+        <div id="mode"></div>
+    </div>
+    <div class="panel">
+        <h2>Sensor Data</h2>
+        <div id="sensorData"></div>
+    </div>
+    <div class="panel">
+        <h2>Control Signals</h2>
+        <div id="controlSignals"></div>
+    </div>
+
+    <script>
+        const modeElem = document.getElementById('mode');
+        const sensorDataElem = document.getElementById('sensorData');
+        const controlSignalsElem = document.getElementById('controlSignals');
+
+        const ws = new WebSocket('ws://localhost:8080/ws');
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            modeElem.innerHTML = `Current Mode: ${data.mode}`;
+            sensorDataElem.innerHTML = `
+                <p>Pitch: ${data.sensor_data.Pitch}</p>
+                <p>Roll: ${data.sensor_data.Roll}</p>
+                <p>Yaw: ${data.sensor_data.Yaw}</p>
+                <p>Altitude: ${data.sensor_data.Altitude}</p>
+                <p>Engine RPM: ${data.sensor_data.EngineRPM}</p>
+            `;
+            controlSignalsElem.innerHTML = `
+                <p>Throttle: ${data.control_signals.Throttle}</p>
+                <p>Prop Pitch: ${data.control_signals.PropPitch}</p>
+                <p>Leanness: ${data.control_signals.Leanness}</p>
+                <p>Magneto Switches: ${data.control_signals.MagnetoSwitch.join(', ')}</p>
+                <p>Ignition Switches: ${data.control_signals.IgnitionSwitch.join(', ')}</p>
+            `;
+        };
+
+        ws.onclose = function() {
+            alert('Connection closed');
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    </script>
+</body>
+</html>
